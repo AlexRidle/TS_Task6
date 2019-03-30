@@ -11,25 +11,18 @@ public class Main {
         int[] nums1 = {1, 2, 1, 2};
         int[] nums2 = {4, 1, 8, 7};
         canBeEqualTo24(nums1);
-        System.out.println();
         canBeEqualTo24(nums2);
     }
 
     private static boolean canBeEqualTo24(int[] nums) {
-        char[] chars = {'+', '-', '*', '/'};
-        char[] numbers = {(char) (nums[0] + '0'), (char) (nums[1] + '0'), (char) (nums[2] + '0'), (char) (nums[3] + '0')};
-        ArrayList<String> possibleSigns = new ArrayList<>();
-        ArrayList<String> possibleNumbers = new ArrayList<>();
-        ArrayList<String> possibleTasksWithoutBrackets = new ArrayList<>();
-        ArrayList<String> completedTasks = new ArrayList<>();
 
         class Calculator {
 
             private ArrayList<String> tempTask;
-            private String item;
+            private String tempNumberOrSign;
             private Calculator calc;
 
-            private String brackets(String task) {
+            private String calculate(String task) {
                 calc = new Calculator();
                 while (task.contains(Character.toString('(')) || task.contains(Character.toString(')'))) {
                     for (int currentChar = 0; currentChar < task.length(); currentChar++) {
@@ -37,86 +30,96 @@ public class Main {
                             for (int i = currentChar; i >= 0; i--) {
                                 if (task.charAt(i) == '(') {
                                     String taskInsideBrackets = task.substring(i + 1, currentChar);
-                                    taskInsideBrackets = calc.recognize(taskInsideBrackets);
+                                    taskInsideBrackets = calc.separateNumbersFromSignsAndGetResult(taskInsideBrackets);
                                     task = task.substring(0, i) + taskInsideBrackets + task.substring(currentChar + 1);
-                                    i = currentChar = 0;
+                                    currentChar = 0;
+                                    i = 0;
                                 }
                             }
                         }
                     }
                 }
-                return calc.recognize(task);
+                return calc.separateNumbersFromSignsAndGetResult(task);
             }
 
-            private String recognize(String task) {
-                Solver solver = new Solver();
+            private String separateNumbersFromSignsAndGetResult(String task) {
                 tempTask = new ArrayList<>();
-                item = "";
+                tempNumberOrSign = "";
                 for (int currentChar = task.length() - 1; currentChar >= 0; currentChar--) {
                     if (Character.isDigit(task.charAt(currentChar))) {
-                        item = task.charAt(currentChar) + item;
+                        tempNumberOrSign = task.charAt(currentChar) + tempNumberOrSign;
                         if (currentChar == 0) {
-                            solver.put();
+                            addCharToTempTaskIfExists();
                         }
                     } else {
                         if (task.charAt(currentChar) == '.') {
-                            item = task.charAt(currentChar) + item;
-                        } else if (task.charAt(currentChar) == '-' && (currentChar == 0 || (!Character.isDigit(task.charAt(currentChar - 1))))) {
-                            item = task.charAt(currentChar) + item;
-                            solver.put();
+                            tempNumberOrSign = task.charAt(currentChar) + tempNumberOrSign;
+                        } else if (task.charAt(currentChar) == '-'
+                                && (currentChar == 0 || (!Character.isDigit(task.charAt(currentChar - 1))))) {
+                            tempNumberOrSign = task.charAt(currentChar) + tempNumberOrSign;
+                            addCharToTempTaskIfExists();
                         } else {
-                            solver.put();
-                            item += task.charAt(currentChar);
-                            solver.put();
+                            addCharToTempTaskIfExists();
+                            tempNumberOrSign += task.charAt(currentChar);
+                            addCharToTempTaskIfExists();
                         }
                     }
                 }
-                tempTask = solver.result(tempTask, "*", "/");
-                tempTask = solver.result(tempTask, "+", "-");
+                tempTask = getResult(tempTask, "*", "/");
+                tempTask = getResult(tempTask, "+", "-");
                 return tempTask.get(0);
             }
 
-            class Solver {
-
-                void put() {
-                    if (!item.equals("")) {
-                        tempTask.add(0, item);
-                        item = "";
-                    }
-                }
-
-                ArrayList<String> result(ArrayList<String> arrayList, String op1, String op2) {
-                    int scale = 10;
-                    BigDecimal result = new BigDecimal(0);
-                    for (int c = 0; c < arrayList.size(); c++) {
-                        if (arrayList.get(c).equals(op1) || arrayList.get(c).equals(op2)) {
-                            if (arrayList.get(c).equals("*")) {
-                                result = new BigDecimal(arrayList.get(c - 1)).multiply(new BigDecimal(arrayList.get(c + 1)));
-                            } else if (arrayList.get(c).equals("/")) {
-                                result = new BigDecimal(arrayList.get(c - 1)).divide(new BigDecimal(arrayList.get(c + 1)), scale, BigDecimal.ROUND_DOWN);
-                            } else if (arrayList.get(c).equals("+")) {
-                                result = new BigDecimal(arrayList.get(c - 1)).add(new BigDecimal(arrayList.get(c + 1)));
-                            } else if (arrayList.get(c).equals("-")) {
-                                result = new BigDecimal(arrayList.get(c - 1)).subtract(new BigDecimal(arrayList.get(c + 1)));
-                            }
-                            try {
-                                arrayList.set(c, (result.setScale(scale, RoundingMode.HALF_DOWN).
-                                        stripTrailingZeros().toPlainString()));
-                                arrayList.remove(c + 1);
-                                arrayList.remove(c - 1);
-                            } catch (Exception ignored) {
-                            }
-                        } else {
-                            continue;
-                        }
-                        c = 0;
-                    }
-                    return arrayList;
+            private void addCharToTempTaskIfExists() {
+                if (!tempNumberOrSign.equals("")) {
+                    tempTask.add(0, tempNumberOrSign);
+                    tempNumberOrSign = "";
                 }
             }
+
+            private ArrayList<String> getResult(ArrayList<String> numbersAndSignsInArray, String signOne, String signTwo) {
+                BigDecimal result = new BigDecimal(0);
+                for (int currentChar = 0; currentChar < numbersAndSignsInArray.size(); currentChar++) {
+                    if (numbersAndSignsInArray.get(currentChar).equals(signOne) || numbersAndSignsInArray.get(currentChar).equals(signTwo)) {
+                        switch (numbersAndSignsInArray.get(currentChar)) {
+                            case "*":
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).multiply(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)));
+                                break;
+                            case "/":
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).divide(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), 5, BigDecimal.ROUND_DOWN);
+                                break;
+                            case "+":
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).add(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)));
+                                break;
+                            case "-":
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).subtract(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)));
+                                break;
+                        }
+                        try {
+                            numbersAndSignsInArray.set(currentChar, (result.setScale(5, RoundingMode.HALF_DOWN)
+                                    .stripTrailingZeros().toPlainString()));
+                            numbersAndSignsInArray.remove(currentChar + 1);
+                            numbersAndSignsInArray.remove(currentChar - 1);
+                        } catch (Exception ignored) {
+                            /* ignoring arithmetic exceptions */
+                        }
+                    } else {
+                        continue;
+                    }
+                    currentChar = 0;
+                }
+                return numbersAndSignsInArray;
+            }
+
         }
 
         class TaskTools {
+
+            private char[] chars = {'+', '-', '*', '/'};
+            private ArrayList<String> possibleSigns = new ArrayList<>();
+            private ArrayList<String> possibleNumbers = new ArrayList<>();
+            private ArrayList<String> possibleTasksWithoutBrackets = new ArrayList<>();
+            private ArrayList<String> completedTasks = new ArrayList<>();
 
             private void writeSignsCombinationsIntoArray(char[] chars, String prefix, int charsLength, int numberOfSymbols, ArrayList<String> array) {
                 if (numberOfSymbols == 0) {
@@ -129,14 +132,14 @@ public class Main {
                 }
             }
 
-            private void writeNumbersCombinationsIntoArray(char[] numbers, String prefix, int numbersLength, ArrayList<String> array) {
+            private void writeNumbersCombinationsIntoArray(int[] numbers, String prefix, int numbersLength, ArrayList<String> array) {
                 if (numbers.length == 1) {
                     prefix += numbers[0];
                     array.add(prefix);
                     return;
                 }
                 for (int i = 0; i < numbersLength; ++i) {
-                    char[] newNumbers = new char[numbersLength - 1];
+                    int[] newNumbers = new int[numbersLength - 1];
                     int counter = 0;
                     for (int j = 0; j < numbersLength; j++) {
                         if (j == i) {
@@ -150,7 +153,7 @@ public class Main {
                 }
             }
 
-            private void mergeSignsAndNumbersIntoArray(ArrayList<String> signs, ArrayList<String> numbers, ArrayList<String> result){
+            private void mergeSignsAndNumbersIntoArray(ArrayList<String> signs, ArrayList<String> numbers, ArrayList<String> result) {
                 for (String sign : signs) {
                     for (String number : numbers) {
                         result.add(""
@@ -165,59 +168,61 @@ public class Main {
             }
 
             private void writeCompletedTasksIntoArray(ArrayList<String> tasksWithoutBrackets, ArrayList<String> completedTasks) {
-                ///////////////////////////////////////////////////////////////////
-                //TEST METHOD! NEED TO REPLACE WITH BRACKETS GENERATOR!
-                ///////////////////////////////////////////////////////////////////
-                StringBuilder temp;
+                //I didn't figured out, how to generate brackets
+                //depending on the length of the mathematical problem.
+                //Have an idea, how to do that, but time is almost run out.
+                //I know, this method is really bad, but i can't solve it better yet.
                 for (String task : tasksWithoutBrackets) {
-                    for (int i = 0; i < 9; i++) { //  Possible brackets with 4 nums:
-                        temp = new StringBuilder(task);
+                    for (int i = 0; i < 9; i++) {
+                        String completedTask = task;
                         switch (i) {
                             case 0:
-                                temp.insert(5, ")").insert(3, ")").insert(0, "((");// ((n+n)+n)+n
+                                completedTask = "((" + task.substring(0, 3) + ")" + task.substring(3, 5) + ")" + task.substring(5); // ((n+n)+n)+n
                                 break;
                             case 1:
-                                temp.insert(7, "))").insert(4, "(").insert(2, "(");// n+(n+(n+n))
+                                completedTask = task.substring(0, 2) + "(" + task.substring(2, 4) + "(" + task.substring(4) + "))"; // n+(n+(n+n))
                                 break;
                             case 2:
-                                temp.insert(7, ")").insert(4, "(").insert(3, ")").insert(0, "(");// (n+n)+(n+n)
+                                completedTask = "(" + task.substring(0, 3) + ")" + task.charAt(3) + "(" + task.substring(4) + ")"; // (n+n)+(n+n)
                                 break;
                             case 3:
-                                temp.insert(3, ")").insert(0, "(");// (n+n)+n+n
+                                completedTask = "(" + task.substring(0, 3) + ")" + task.substring(3); // (n+n)+n+n
                                 break;
                             case 4:
-                                temp.insert(5, ")").insert(2, "(");// n+(n+n)+n
+                                completedTask = task.substring(0, 2) + "(" + task.substring(2, 5) + ")" + task.substring(5); // n+(n+n)+n
                                 break;
                             case 5:
-                                temp.insert(7, ")").insert(4, "(");// n+n+(n+n)
+                                completedTask = task.substring(0, 4) + "(" + task.substring(4) + ")"; // n+n+(n+n)
                                 break;
                             case 6:
-                                temp.insert(5, ")").insert(0, "(");// (n+n+n)+n
+                                completedTask = "(" + task.substring(0, 5) + ")" + task.substring(5); // (n+n+n)+n
                                 break;
                             case 7:
-                                temp.insert(7, ")").insert(2, "(");// n+(n+n+n)
+                                completedTask = task.substring(0, 2) + "(" + task.substring(2) + ")"; // n+(n+n+n)
                                 break;
                         }
-                        completedTasks.add(temp.toString());
+                        completedTasks.add(completedTask);
                     }
                 }
                 tasksWithoutBrackets.clear();
-                ///////////////////////////////////////////////////////////////////
-                //TEST METHOD! END
-                ///////////////////////////////////////////////////////////////////
             }
 
             private void printInfo(String message, boolean answer) {
                 System.out.println("На входе: " + Arrays.toString(nums));
                 System.out.println("На выходе: " + answer);
                 System.out.println("Пояснение: " + message);
+                System.out.println();
             }
 
-            private boolean solveTask(ArrayList<String> possibleTasks) {
+            private boolean solveTask() {
+                writeSignsCombinationsIntoArray(chars, "", chars.length, 3, possibleSigns);
+                writeNumbersCombinationsIntoArray(nums, "", nums.length, possibleNumbers);
+                mergeSignsAndNumbersIntoArray(possibleSigns, possibleNumbers, possibleTasksWithoutBrackets);
+                writeCompletedTasksIntoArray(possibleTasksWithoutBrackets, completedTasks);
                 Calculator calculator = new Calculator();
-                for (String answer : possibleTasks) {
+                for (String answer : completedTasks) {
                     try {
-                        if (calculator.brackets(answer).equals("24")) {
+                        if (calculator.calculate(answer).equals("24")) {
                             printInfo(answer + "=24", true);
                             return true;
                         }
@@ -230,11 +235,6 @@ public class Main {
             }
         }
 
-        TaskTools tools = new TaskTools();
-        tools.writeSignsCombinationsIntoArray(chars, "", chars.length, 3, possibleSigns);
-        tools.writeNumbersCombinationsIntoArray(numbers, "", nums.length, possibleNumbers);
-        tools.mergeSignsAndNumbersIntoArray(possibleSigns,possibleNumbers,possibleTasksWithoutBrackets);
-        tools.writeCompletedTasksIntoArray(possibleTasksWithoutBrackets, completedTasks);
-        return tools.solveTask(completedTasks);
+        return new TaskTools().solveTask();
     }
 }
