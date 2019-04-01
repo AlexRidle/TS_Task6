@@ -89,7 +89,7 @@ public class Main {
                                 result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).multiply(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), MathContext.DECIMAL32);
                                 break;
                             case "/":
-                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).divide(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), 50, BigDecimal.ROUND_DOWN);
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).divide(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), 10, BigDecimal.ROUND_DOWN);
                                 break;
                             case "+":
                                 result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).add(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)));
@@ -99,7 +99,7 @@ public class Main {
                                 break;
                         }
                         try {
-                            numbersAndSignsInArray.set(currentChar, (result.setScale(50, RoundingMode.HALF_DOWN)
+                            numbersAndSignsInArray.set(currentChar, (result.setScale(10, RoundingMode.HALF_DOWN)
                                     .stripTrailingZeros().toPlainString()));
                             numbersAndSignsInArray.remove(currentChar + 1);
                             numbersAndSignsInArray.remove(currentChar - 1);
