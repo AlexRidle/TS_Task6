@@ -1,17 +1,19 @@
 package TouchSoft;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) {
-        int[] nums1 = {3, 3, 7, 7};
+        int[] nums = {3, 3, 7, 7};
+        int[] nums1 = {3, 3, 8, 8};
         int[] nums2 = {4, 1, 8, 7};
         int[] nums3 = {1, 2, 1, 2};
+        canBeEqualTo24(nums);
         canBeEqualTo24(nums1);
         canBeEqualTo24(nums2);
         canBeEqualTo24(nums3);
@@ -86,10 +88,10 @@ public class Main {
                     if (numbersAndSignsInArray.get(currentChar).equals(signOne) || numbersAndSignsInArray.get(currentChar).equals(signTwo)) {
                         switch (numbersAndSignsInArray.get(currentChar)) {
                             case "*":
-                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).multiply(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), MathContext.DECIMAL32);
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).multiply(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)));
                                 break;
                             case "/":
-                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).divide(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), 10, BigDecimal.ROUND_DOWN);
+                                result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).divide(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)), 15, BigDecimal.ROUND_DOWN);
                                 break;
                             case "+":
                                 result = new BigDecimal(numbersAndSignsInArray.get(currentChar - 1)).add(new BigDecimal(numbersAndSignsInArray.get(currentChar + 1)));
@@ -99,7 +101,7 @@ public class Main {
                                 break;
                         }
                         try {
-                            numbersAndSignsInArray.set(currentChar, (result.setScale(10, RoundingMode.HALF_DOWN)
+                            numbersAndSignsInArray.set(currentChar, (result.setScale(15, RoundingMode.HALF_DOWN)
                                     .stripTrailingZeros().toPlainString()));
                             numbersAndSignsInArray.remove(currentChar + 1);
                             numbersAndSignsInArray.remove(currentChar - 1);
@@ -225,7 +227,10 @@ public class Main {
                 Calculator calculator = new Calculator();
                 for (String answer : completedTasks) {
                     try {
-                        if (calculator.calculate(answer).equals("24")) {
+                        DecimalFormat decimalFormat = new DecimalFormat("#.########");
+                        if (decimalFormat.format(Double
+                                .valueOf(calculator.calculate(answer)))
+                                .equals("24")) {
                             printInfo(answer + "=24", true);
                             return true;
                         }
