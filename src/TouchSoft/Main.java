@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 
 public class Main {
 
@@ -25,17 +26,15 @@ public class Main {
 
             private ArrayList<String> tempTask;
             private String tempNumberOrSign;
-            private Calculator calc;
 
             private String calculate(String task) {
-                calc = new Calculator();
                 while (task.contains(Character.toString('(')) || task.contains(Character.toString(')'))) {
                     for (int currentChar = 0; currentChar < task.length(); currentChar++) {
                         if (task.charAt(currentChar) == ')') {
                             for (int i = currentChar; i >= 0; i--) {
                                 if (task.charAt(i) == '(') {
                                     String taskInsideBrackets = task.substring(i + 1, currentChar);
-                                    taskInsideBrackets = calc.separateNumbersFromSignsAndGetResult(taskInsideBrackets);
+                                    taskInsideBrackets = separateNumbersFromSignsAndGetResult(taskInsideBrackets);
                                     task = task.substring(0, i) + taskInsideBrackets + task.substring(currentChar + 1);
                                     currentChar = 0;
                                     i = 0;
@@ -44,25 +43,24 @@ public class Main {
                         }
                     }
                 }
-                return calc.separateNumbersFromSignsAndGetResult(task);
+                return separateNumbersFromSignsAndGetResult(task);
             }
 
             private String separateNumbersFromSignsAndGetResult(String task) {
                 tempTask = new ArrayList<>();
                 tempNumberOrSign = "";
-                for (int currentChar = task.length() - 1; currentChar >= 0; currentChar--) {
+                for (int currentChar = 0; currentChar < task.length(); currentChar++) {
                     if (Character.isDigit(task.charAt(currentChar))) {
-                        tempNumberOrSign = task.charAt(currentChar) + tempNumberOrSign;
-                        if (currentChar == 0) {
+                        tempNumberOrSign = tempNumberOrSign + task.charAt(currentChar);
+                        if (currentChar == task.length()-1) {
                             addCharToTempTaskIfExists();
                         }
                     } else {
                         if (task.charAt(currentChar) == '.') {
-                            tempNumberOrSign = task.charAt(currentChar) + tempNumberOrSign;
+                            tempNumberOrSign += task.charAt(currentChar);
                         } else if (task.charAt(currentChar) == '-'
-                                && (currentChar == 0 || (!Character.isDigit(task.charAt(currentChar - 1))))) {
-                            tempNumberOrSign = task.charAt(currentChar) + tempNumberOrSign;
-                            addCharToTempTaskIfExists();
+                                && ((currentChar == 0 || !Character.isDigit(task.charAt(currentChar - 1)) && Character.isDigit(task.charAt(currentChar + 1))))) {
+                            tempNumberOrSign += task.charAt(currentChar);
                         } else {
                             addCharToTempTaskIfExists();
                             tempNumberOrSign += task.charAt(currentChar);
@@ -77,7 +75,7 @@ public class Main {
 
             private void addCharToTempTaskIfExists() {
                 if (!tempNumberOrSign.equals("")) {
-                    tempTask.add(0, tempNumberOrSign);
+                    tempTask.add(tempNumberOrSign);
                     tempNumberOrSign = "";
                 }
             }
